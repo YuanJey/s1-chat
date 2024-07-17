@@ -10,7 +10,7 @@ type StorageHandle struct {
 }
 
 // Processing 存储消息
-func (s *StorageHandle) Processing(msg *structs.Message) {
+func (s *StorageHandle) Processing(msg *structs.Message) bool {
 	//TODO implement me
 	panic("implement me")
 }

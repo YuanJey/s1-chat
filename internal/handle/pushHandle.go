@@ -9,7 +9,7 @@ type PushHandle struct {
 	msgTypes []int
 }
 
-func (p *PushHandle) Processing(msg *structs.Message) {
+func (p *PushHandle) Processing(msg *structs.Message) bool {
 	//TODO implement me
 	panic("implement me")
 }

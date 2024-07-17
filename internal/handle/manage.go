@@ -29,14 +29,55 @@ func (m *Manage) AddInProcessHandle(handle Handle) {
 func (m *Manage) AddAfterHandle(handle Handle) {
 	m.beforeHandles = append(m.beforeHandles, handle)
 }
-func (m *Manage) Work(msg *structs.Message) {
+
+func (m *Manage) ProcessMessage(msg *structs.Message) {
 	for i := range m.beforeHandles {
-		m.beforeHandles[i].Processing(msg)
+		isContinue := m.beforeHandles[i].Processing(msg)
+		if isContinue {
+			continue
+		} else {
+			return
+		}
 	}
 	for i := range m.inProcessHandles {
-		m.inProcessHandles[i].Processing(msg)
+		isContinue := m.inProcessHandles[i].Processing(msg)
+		if isContinue {
+			continue
+		} else {
+			return
+		}
 	}
 	for i := range m.afterHandles {
-		m.afterHandles[i].Processing(msg)
+		isContinue := m.afterHandles[i].Processing(msg)
+		if isContinue {
+			continue
+		} else {
+			return
+		}
 	}
+}
+
+type Manage2 struct {
+	handles []Handle
+}
+
+func NewManage2() *Manage2 {
+	var handles []Handle
+	return &Manage2{handles: handles}
+}
+func (m *Manage2) AddHandle(handle Handle) {
+	m.handles = append(m.handles, handle)
+}
+
+// ProcessMessage bool 是否处理完成
+func (m *Manage2) ProcessMessage(msg *structs.Message) bool {
+	for i := range m.handles {
+		isContinue := m.handles[i].Processing(msg)
+		if isContinue {
+			continue
+		} else {
+			return true
+		}
+	}
+	return true
 }
