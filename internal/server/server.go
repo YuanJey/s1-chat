@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"s1-chat/internal/handle"
+	"s1-chat/pkg/consts"
 	"s1-chat/pkg/structs"
 	"s1-chat/pkg/utils"
 )
@@ -59,14 +60,12 @@ func (s *TCPServer) Work(conn net.Conn, msg []byte) {
 	}
 	finish := s.manage.ProcessMessage(&message)
 	if finish {
-		finishMessage := structs.Message{SendFinishMessage: struct {
-			Id string `json:"id"`
-		}(struct{ Id string }{Id: message.Id})}
+		finishMessage := structs.SendFinishMessage{Id: message.Id, Type: consts.SendFinishMessageType}
 		s.Send(conn, finishMessage)
 	}
 }
-func (s *TCPServer) Send(conn net.Conn, msg structs.Message) {
-	_, err := conn.Write([]byte(utils.StructToJsonString(msg)))
+func (s *TCPServer) Send(conn net.Conn, msg structs.Msg) {
+	_, err := conn.Write(msg.ToByte())
 	if err != nil {
 		fmt.Printf("Error sending response: %s\n", err)
 	}
