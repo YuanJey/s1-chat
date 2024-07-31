@@ -11,9 +11,15 @@ import (
 )
 
 type MessageServer struct {
+	wsAddr  string
 	port    string
-	manage  *handle.Manage2
+	manage2 *handle.Manage2
+	manage  *handle.Manage
 	connMap map[string]net.Conn
+}
+
+func NewMessageServer(port string) *MessageServer {
+	return &MessageServer{port: port, connMap: make(map[string]net.Conn)}
 }
 
 func (s *MessageServer) addConn(conn *net.Conn) {
@@ -46,7 +52,7 @@ func (s *MessageServer) handleConnection(conn net.Conn) {
 	for scanner.Scan() {
 		message := scanner.Bytes()
 		fmt.Printf("Received: %s\n", message)
-		s.Work(message)
+		go s.Work(message)
 		_, err := conn.Write(message)
 		if err != nil {
 			fmt.Printf("Error sending response: %s\n", err)
@@ -62,7 +68,8 @@ func (s *MessageServer) Work(msg []byte) {
 		fmt.Printf(" Work err: %s\n", err)
 		return
 	}
-	finish := s.manage.ProcessMessage(&message)
+	s.manage.ProcessMessage(&message)
+	finish := s.manage2.ProcessMessage(&message)
 	if finish {
 		finishMessage := structs.SendFinishMessage{Id: message.Id, Type: consts.SendFinishMessageType}
 		s.Send(message.To, finishMessage)

@@ -5,54 +5,45 @@ import (
 )
 
 type Manage struct {
-	beforeHandles    []Handle
-	inProcessHandles []Handle
-	afterHandles     []Handle
+	beforeHandlesCount    int
+	inProcessHandlesCount int
+	afterHandlesCount     int
+	beforeHandles         map[int]Handle
+	inProcessHandles      map[int]Handle
+	afterHandles          map[int]Handle
 }
 
 func NewManage() *Manage {
-	var beforeHandles []Handle
-	var inProcessHandles []Handle
-	var afterHandles []Handle
 	return &Manage{
-		afterHandles:     afterHandles,
-		inProcessHandles: inProcessHandles,
-		beforeHandles:    beforeHandles,
+		afterHandles:     make(map[int]Handle),
+		inProcessHandles: make(map[int]Handle),
+		beforeHandles:    make(map[int]Handle),
 	}
 }
-func (m *Manage) AddBeforeHandle(handle Handle) {
-	m.beforeHandles = append(m.beforeHandles, handle)
+func (m *Manage) AddBeforeHandle(index int, handle Handle) {
+	m.beforeHandles[index] = handle
 }
-func (m *Manage) AddInProcessHandle(handle Handle) {
-	m.beforeHandles = append(m.beforeHandles, handle)
+func (m *Manage) AddInProcessHandle(index int, handle Handle) {
+	m.inProcessHandles[index] = handle
 }
-func (m *Manage) AddAfterHandle(handle Handle) {
-	m.beforeHandles = append(m.beforeHandles, handle)
+func (m *Manage) AddAfterHandle(index int, handle Handle) {
+	m.afterHandles[index] = handle
 }
 
 func (m *Manage) ProcessMessage(msg *structs.Message) {
-	for i := range m.beforeHandles {
-		isContinue := m.beforeHandles[i].Processing(msg)
-		if isContinue {
-			continue
-		} else {
-			return
+	for i := range m.beforeHandlesCount {
+		if handle, ok := m.beforeHandles[i]; ok {
+			handle.Processing(msg)
 		}
 	}
-	for i := range m.inProcessHandles {
-		isContinue := m.inProcessHandles[i].Processing(msg)
-		if isContinue {
-			continue
-		} else {
-			return
+	for i := range m.inProcessHandlesCount {
+		if handle, ok := m.inProcessHandles[i]; ok {
+			handle.Processing(msg)
 		}
 	}
-	for i := range m.afterHandles {
-		isContinue := m.afterHandles[i].Processing(msg)
-		if isContinue {
-			continue
-		} else {
-			return
+	for i := range m.afterHandlesCount {
+		if handle, ok := m.afterHandles[i]; ok {
+			handle.Processing(msg)
 		}
 	}
 }
