@@ -1,22 +1,36 @@
 package server
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/gorilla/websocket"
 	"net"
 	"net/http"
 	"s1-chat/internal/handle"
+	"s1-chat/pkg/structs"
 	"s1-chat/pkg/utils"
+	"time"
 )
 
 type WsServer struct {
 	wsAddr     string
-	manage     *handle.Manage2
+	Manage     *handle.Manage
 	connMap    map[string]net.Conn
 	wsUpGrader *websocket.Upgrader
 }
 
-func (ws *WsServer) StartWSServer() {
+func (ws *WsServer) SetManage(manage *handle.Manage) {
+	ws.Manage = manage
+}
+func (ws *WsServer) OnInit(wsPort int) {
+	ws.wsAddr = ":" + utils.IntToString(wsPort)
+	ws.wsUpGrader = &websocket.Upgrader{
+		HandshakeTimeout: time.Duration(10) * time.Second,
+		ReadBufferSize:   4096,
+		CheckOrigin:      func(r *http.Request) bool { return true },
+	}
+}
+func (ws *WsServer) StartServer() {
 	http.HandleFunc("/", ws.wsHandler)
 	err := http.ListenAndServe(ws.wsAddr, nil)
 	if err != nil {
@@ -31,8 +45,6 @@ func (ws *WsServer) wsHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		operationID = utils.OperationIDGenerator()
 	}
-	fmt.Println(" args: ")
-	fmt.Println(query)
 	conn, err := ws.wsUpGrader.Upgrade(w, r, nil)
 	if err != nil {
 		fmt.Println(err)
@@ -41,16 +53,31 @@ func (ws *WsServer) wsHandler(w http.ResponseWriter, r *http.Request) {
 	go func(operationID string) {
 		for {
 			msgType, message, err := conn.ReadMessage()
+			fmt.Println(msgType)
+			if msgType == websocket.PingMessage {
+				fmt.Println("ping")
+			}
 			if err != nil {
-				fmt.Println(operationID)
 				fmt.Println(err)
 				return
 			}
-			fmt.Println(msgType)
-			fmt.Println(message)
+			if msgType == websocket.CloseMessage {
+				fmt.Println("close")
+				return
+			}
+			ws.Work(message)
 		}
 	}(operationID)
 }
-func (ws *WsServer) headerCheck(w http.ResponseWriter, r *http.Request, operationID string) {
 
+func (ws *WsServer) Work(msg []byte) {
+	buff := bytes.NewBuffer(msg)
+	message := structs.Message{}
+	fmt.Println(buff.String())
+	err := utils.JsonStringToStruct(buff.String(), &message)
+	if err != nil {
+		fmt.Printf(" Work err: %s %s\n", err, string(msg))
+		return
+	}
+	ws.Manage.ProcessMessage(&message)
 }

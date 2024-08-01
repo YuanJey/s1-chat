@@ -5,12 +5,13 @@ import (
 )
 
 type Manage struct {
-	beforeHandlesCount    int
-	inProcessHandlesCount int
-	afterHandlesCount     int
-	beforeHandles         map[int]Handle
-	inProcessHandles      map[int]Handle
-	afterHandles          map[int]Handle
+	beforeHandlesMaxCount    int
+	inProcessHandlesMaxCount int
+	afterHandlesCountMax     int
+	beforeHandles            map[int]Handle
+	inProcessHandles         map[int]Handle
+	afterHandles             map[int]Handle
+	clusterHandles           []Handle
 }
 
 func NewManage() *Manage {
@@ -18,33 +19,55 @@ func NewManage() *Manage {
 		afterHandles:     make(map[int]Handle),
 		inProcessHandles: make(map[int]Handle),
 		beforeHandles:    make(map[int]Handle),
+		clusterHandles:   []Handle{},
 	}
 }
 func (m *Manage) AddBeforeHandle(index int, handle Handle) {
 	m.beforeHandles[index] = handle
+	if m.beforeHandlesMaxCount < index {
+		m.beforeHandlesMaxCount = index
+		return
+	}
+	m.beforeHandlesMaxCount = index
 }
 func (m *Manage) AddInProcessHandle(index int, handle Handle) {
 	m.inProcessHandles[index] = handle
+	if m.inProcessHandlesMaxCount < index {
+		m.inProcessHandlesMaxCount = index
+		return
+	}
+	m.inProcessHandlesMaxCount = index
 }
 func (m *Manage) AddAfterHandle(index int, handle Handle) {
 	m.afterHandles[index] = handle
+	if m.afterHandlesCountMax < index {
+		m.afterHandlesCountMax = index
+		return
+	}
+	m.afterHandlesCountMax = index
+}
+func (m *Manage) AddClusterHandle(handle Handle) {
+	m.clusterHandles = append(m.clusterHandles, handle)
 }
 
 func (m *Manage) ProcessMessage(msg *structs.Message) {
-	for i := range m.beforeHandlesCount {
+	for i := range m.beforeHandlesMaxCount + 1 {
 		if handle, ok := m.beforeHandles[i]; ok {
 			handle.Processing(msg)
 		}
 	}
-	for i := range m.inProcessHandlesCount {
+	for i := range m.inProcessHandlesMaxCount + 1 {
 		if handle, ok := m.inProcessHandles[i]; ok {
 			handle.Processing(msg)
 		}
 	}
-	for i := range m.afterHandlesCount {
+	for i := range m.afterHandlesCountMax + 1 {
 		if handle, ok := m.afterHandles[i]; ok {
 			handle.Processing(msg)
 		}
+	}
+	for i := range m.clusterHandles {
+		m.clusterHandles[i].Processing(msg)
 	}
 }
 

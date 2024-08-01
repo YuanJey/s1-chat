@@ -2,31 +2,32 @@ package server
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"net"
 	"s1-chat/internal/handle"
-	"s1-chat/pkg/consts"
 	"s1-chat/pkg/structs"
 	"s1-chat/pkg/utils"
 )
 
-type MessageServer struct {
+type TCPServer struct {
 	wsAddr  string
 	port    string
-	manage2 *handle.Manage2
-	manage  *handle.Manage
+	Manage  *handle.Manage
 	connMap map[string]net.Conn
 }
 
-func NewMessageServer(port string) *MessageServer {
-	return &MessageServer{port: port, connMap: make(map[string]net.Conn)}
+func NewMessageServer(port string) *TCPServer {
+	return &TCPServer{port: port, connMap: make(map[string]net.Conn)}
+}
+func (s *TCPServer) SetManage(manage *handle.Manage) {
+	s.Manage = manage
+}
+func (s *TCPServer) addConn(conn *net.Conn) {
 }
 
-func (s *MessageServer) addConn(conn *net.Conn) {
-}
-
-// StartTCPServer starts a TCP server on the specified port.
-func (s *MessageServer) StartTCPServer() {
+// StartServer starts a TCP server on the specified port.
+func (s *TCPServer) StartServer() {
 	listener, err := net.Listen("tcp", ":"+s.port)
 	if err != nil {
 		fmt.Printf("Error starting TCP server: %s\n", err)
@@ -46,7 +47,7 @@ func (s *MessageServer) StartTCPServer() {
 }
 
 // handleConnection handles the incoming connections.
-func (s *MessageServer) handleConnection(conn net.Conn) {
+func (s *TCPServer) handleConnection(conn net.Conn) {
 	fmt.Printf("Connection accepted from %s\n", conn.RemoteAddr().String())
 	scanner := bufio.NewScanner(conn)
 	for scanner.Scan() {
@@ -61,21 +62,17 @@ func (s *MessageServer) handleConnection(conn net.Conn) {
 	}
 	conn.Close()
 }
-func (s *MessageServer) Work(msg []byte) {
+func (s *TCPServer) Work(msg []byte) {
+	buff := bytes.NewBuffer(msg)
 	message := structs.Message{}
-	err := utils.JsonStringToStruct(string(msg), message)
+	err := utils.JsonStringToStruct(buff.String(), &message)
 	if err != nil {
 		fmt.Printf(" Work err: %s\n", err)
 		return
 	}
-	s.manage.ProcessMessage(&message)
-	finish := s.manage2.ProcessMessage(&message)
-	if finish {
-		finishMessage := structs.SendFinishMessage{Id: message.Id, Type: consts.SendFinishMessageType}
-		s.Send(message.To, finishMessage)
-	}
+	s.Manage.ProcessMessage(&message)
 }
-func (s *MessageServer) Send(toId string, msg structs.Msg) {
+func (s *TCPServer) Send(toId string, msg structs.Msg) {
 	if conn, ok := s.connMap[toId]; ok {
 		_, err := conn.Write(msg.ToByte())
 		if err != nil {
