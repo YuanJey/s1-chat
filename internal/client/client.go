@@ -1,10 +1,8 @@
 package client
 
 import (
-	"bufio"
 	"fmt"
 	"net"
-	"os"
 )
 
 type TCPClient struct {
@@ -26,7 +24,7 @@ func (c *TCPClient) ConnectToServer() {
 	c.conn = conn
 	fmt.Println("Connected to server. Type messages to send.")
 
-	scanner := bufio.NewScanner(os.Stdin)
+	/*scanner := bufio.NewScanner(os.Stdin)
 	go func() {
 		for scanner.Scan() {
 			text := scanner.Text()
@@ -43,7 +41,7 @@ func (c *TCPClient) ConnectToServer() {
 			}
 			fmt.Print("Server response: ", response)
 		}
-	}()
+	}()*/
 
 }
 func (c *TCPClient) SendMsg(text string) {
