@@ -11,7 +11,7 @@ type TestHandle struct {
 }
 
 func (t *TestHandle) Processing(msg *structs.Message) bool {
-	fmt.Println("tcp server Handle msg ")
+	fmt.Println("tcp ws_server Handle msg ")
 	fmt.Println(msg)
 	return true
 }

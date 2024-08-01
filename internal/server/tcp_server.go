@@ -26,15 +26,15 @@ func (s *TCPServer) SetManage(manage *handle.Manage) {
 func (s *TCPServer) addConn(conn *net.Conn) {
 }
 
-// StartServer starts a TCP server on the specified port.
+// StartServer starts a TCP ws_server on the specified port.
 func (s *TCPServer) StartServer() {
 	listener, err := net.Listen("tcp", ":"+s.port)
 	if err != nil {
-		fmt.Printf("Error starting TCP server: %s\n", err)
+		fmt.Printf("Error starting TCP ws_server: %s\n", err)
 		return
 	}
 	defer listener.Close()
-	fmt.Printf("TCP server started on port %s\n", s.port)
+	fmt.Printf("TCP ws_server started on port %s\n", s.port)
 
 	for {
 		conn, err := listener.Accept()

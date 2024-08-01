@@ -14,11 +14,11 @@ type Cluster struct {
 func (c *Cluster) StartClusterServer() {
 	listener, err := net.Listen("tcp", ":"+consts.ClusterServerPort)
 	if err != nil {
-		fmt.Printf("Error starting TCP server: %s\n", err)
+		fmt.Printf("Error starting TCP ws_server: %s\n", err)
 		return
 	}
 	defer listener.Close()
-	fmt.Printf("TCP server started on port %s\n", consts.ClusterServerPort)
+	fmt.Printf("TCP ws_server started on port %s\n", consts.ClusterServerPort)
 
 	for {
 		conn, err := listener.Accept()

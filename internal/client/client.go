@@ -17,12 +17,12 @@ func NewTCPClient(address string) *TCPClient {
 func (c *TCPClient) ConnectToServer() {
 	conn, err := net.Dial("tcp", c.Address)
 	if err != nil {
-		fmt.Println("Error connecting to server:", err)
+		fmt.Println("Error connecting to ws_server:", err)
 		return
 	}
 	//defer conn.Close()
 	c.conn = conn
-	fmt.Println("Connected to server. Type messages to send.")
+	fmt.Println("Connected to ws_server. Type messages to send.")
 
 	/*scanner := bufio.NewScanner(os.Stdin)
 	go func() {
